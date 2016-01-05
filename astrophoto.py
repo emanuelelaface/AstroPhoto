@@ -129,6 +129,7 @@ class AstroImage:
       r = (self.rgb16[:,:,0] - r)+self.white/10.0
       g = (self.rgb16[:,:,1] - g)+self.white/10.0
       b = (self.rgb16[:,:,2] - b)+self.white/10.0
+
       r = r.clip(0,self.white)
       g = g.clip(0,self.white)
       b = b.clip(0,self.white)
@@ -143,6 +144,13 @@ class AstroImage:
       r = r + (self.white/10.0 - hist_r[:,0].argsort()[::-1][0])
       g = g + (self.white/10.0 - hist_g[:,0].argsort()[::-1][0])
       b = b + (self.white/10.0 - hist_b[:,0].argsort()[::-1][0])
+
+      r = r.clip(0,self.white)
+      g = g.clip(0,self.white)
+      b = b.clip(0,self.white)
+      r = r.astype(numpy.uint16)
+      g = g.astype(numpy.uint16)
+      b = b.astype(numpy.uint16)
 
       self.rgb16[:,:,0] = r
       self.rgb16[:,:,1] = g
@@ -774,7 +782,7 @@ class AstroUI(QtGui.QWidget):
     count = numpy.empty(shape=self.current_image.rgb16.shape, dtype=float)
     count.fill(1.0)
     
-    frame_number = 1
+    frame_number = 1.0
     for filename in self.raw_saved:
       self.current_image = AstroImage(filename)
       self.current_image.openFile()
@@ -783,7 +791,7 @@ class AstroUI(QtGui.QWidget):
       delta = self.current_image.rgb16.astype(numpy.float) - average
       average = average + delta/frame_number
       stdev = stdev + delta*(self.current_image.rgb16.astype(numpy.float) - average)
-      frame_number = frame_number + 1
+      frame_number = frame_number + 1.0
 
     stdev = numpy.sqrt(stdev/frame_number)
       
@@ -792,7 +800,7 @@ class AstroUI(QtGui.QWidget):
       self.current_image = AstroImage(filename)
       self.current_image.openFile()
       print 'Loading '+filename+' for stack'
-      mask = (numpy.fabs(self.current_image.rgb16 - average) < tolerance * stdev).astype(numpy.float)
+      mask = (numpy.fabs(self.current_image.rgb16 - average) <= tolerance * stdev).astype(numpy.float)
       stack = stack + mask*self.current_image.rgb16.astype(numpy.float)
       count = count + mask
       #os.remove(filename)
